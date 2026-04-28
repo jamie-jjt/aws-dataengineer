@@ -1,0 +1,1292 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Certified Data Engineer – Associate (DEA-C01) Practice Exam</title>
+    <style>
+        :root {
+            --aws-blue: #232f3e;
+            --aws-orange: #ff9900;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --correct-color: #2e7d32;
+            --incorrect-color: #d32f2f;
+            --explanation-bg: #e3f2fd;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header {
+            border-bottom: 3px solid var(--aws-orange);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+
+        h1 { color: var(--aws-blue); margin: 0; font-size: 24px; }
+        .exam-info { font-size: 14px; color: #666; margin-top: 5px; }
+
+        .progress-bar {
+            height: 10px;
+            background: #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--aws-orange);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-box {
+            display: none;
+        }
+
+        .question-box.active {
+            display: block;
+        }
+
+        .question-text {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .option-item {
+            margin-bottom: 12px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .option-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .option-item input {
+            margin-right: 15px;
+            margin-top: 5px;
+        }
+
+        .btn-container {
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .btn-submit { background-color: var(--aws-orange); color: white; }
+        .btn-next { background-color: var(--aws-blue); color: white; }
+        .btn-prev { background-color: #666; color: white; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        .feedback-area {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .feedback-correct { border-left: 5px solid var(--correct-color); background: #e8f5e9; }
+        .feedback-incorrect { border-left: 5px solid var(--incorrect-color); background: #ffebee; }
+
+        .explanation-item {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .explanation-item b { display: block; margin-bottom: 4px; }
+
+        .result-screen {
+            text-align: center;
+            display: none;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 10px solid var(--aws-orange);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            margin: 30px auto;
+        }
+
+        .pass-msg { color: var(--correct-color); font-size: 24px; font-weight: bold; }
+        .fail-msg { color: var(--incorrect-color); font-size: 24px; font-weight: bold; }
+
+        .domain-tag {
+            display: inline-block;
+            background: #eee;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>AWS Certified Data Engineer – Associate</h1>
+        <div class="exam-info">Exam Code: DEA-C01 | 50 Questions | Passing Score: 72%</div>
+    </header>
+
+    <div id="exam-ui">
+        <div class="progress-info">Question <span id="current-q-num">1</span> of 50</div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+        <div id="question-container"></div>
+
+        <div class="btn-container">
+            <button id="btn-prev" class="btn-prev" onclick="movePrevious()" disabled>Previous</button>
+            <button id="btn-submit" class="btn-submit" onclick="submitAnswer()">Submit Answer</button>
+            <button id="btn-next" class="btn-next" onclick="moveNext()" style="display:none">Next Question</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-screen">
+        <h2>Exam Complete</h2>
+        <div class="score-circle" id="final-score-circle">0%</div>
+        <div id="pass-fail-msg"></div>
+        <p>Your Score: <span id="correct-count">0</span> / 50</p>
+        <button class="btn-submit" onclick="location.reload()">Retake Exam</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "A company needs to ingest streaming data from thousands of IoT devices. The data must be transformed in near real-time using SQL and then loaded into an Amazon S3 data lake. Which architecture is the MOST cost-effective and operationally efficient?",
+            options: [
+                "A. Use Kinesis Data Streams to collect data, then use an AWS Lambda function to transform data and write to S3.",
+                "B. Use Kinesis Data Streams to collect data, then use Kinesis Data Analytics to transform the data, and Kinesis Data Firehose to deliver it to S3.",
+                "C. Use Amazon MSK to ingest the stream, and a Spark Streaming application on EMR to process and write to S3.",
+                "D. Use AWS AppFlow to ingest the device data directly into an S3 bucket and trigger a Glue Crawler."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. While Lambda works, it requires managing custom code and execution scaling for thousands of devices, which is less operationally efficient than a managed SQL analytics service.",
+                1: "Correct. Kinesis Data Analytics allows for near real-time SQL transformation on streaming data. Paired with Firehose, it provides a fully managed, serverless pipeline from ingestion to S3 storage.",
+                2: "Incorrect. Amazon MSK and EMR are powerful but involve significant management overhead and higher costs for this specific use case compared to Kinesis serverless options.",
+                3: "Incorrect. AWS AppFlow is designed for SaaS application integration (e.g., Salesforce, Zendesk), not for high-velocity IoT telemetry streaming."
+            }
+        },
+        {
+            domain: "Data Storage & Management",
+            type: "multiple",
+            question: "A data engineer is designing a schema for Amazon Redshift to improve query performance for a large sales table frequently joined with a date dimension table. Which TWO actions would best optimize this? (Choose TWO)",
+            options: [
+                "A. Set the distribution style of the date dimension table to ALL.",
+                "B. Set the distribution style of both tables to EVEN.",
+                "C. Set the distribution style of the large sales table to KEY based on the date column.",
+                "D. Set the distribution style of the date dimension table to AUTO and the sales table to ALL.",
+                "E. Use a SORT KEY on the date column for both tables."
+            ],
+            correctAnswers: [0, 2],
+            explanations: {
+                0: "Correct. Distributing a small dimension table to ALL nodes ensures a local copy is available on every compute node, eliminating network traffic during joins with larger tables.",
+                1: "Incorrect. EVEN distribution is a fallback for when no clear join key exists; it does not optimize for joins and causes heavy data shuffling.",
+                2: "Correct. Using KEY distribution on the join column for the large table ensures related data is co-located on the same nodes as the dimension data (which is on all nodes).",
+                3: "Incorrect. You cannot set a large fact table to ALL distribution as it would consume too much storage on every node and degrade performance.",
+                4: "Incorrect. While Sort Keys help with filtering and range scans, they do not manage how data is partitioned across nodes, which is the primary concern for join performance."
+            }
+        },
+        {
+            domain: "Data Security & Governance",
+            type: "single",
+            question: "A company uses AWS Lake Formation to manage its S3 data lake. A data analyst needs access to specific columns in a Glue Data Catalog table but should not see PII columns. How should the data engineer implement this?",
+            options: [
+                "A. Create an IAM policy that denies s3:GetObject on the S3 prefixes corresponding to the PII columns.",
+                "B. Use Lake Formation data filters to grant 'Select' permissions on specific columns to the analyst's IAM role.",
+                "C. Create a separate S3 bucket for the analyst and use a Glue job to copy only the allowed columns.",
+                "D. Use Amazon Redshift Spectrum and create a VIEW that excludes the PII columns."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. S3 is object-level storage. You cannot deny access to specific columns within a file (like Parquet or CSV) using IAM S3 policies.",
+                1: "Correct. Lake Formation provides fine-grained access control, allowing administrators to grant column-level, row-level, and cell-level permissions without duplicating data.",
+                2: "Incorrect. This creates data silos and increases management overhead. Lake Formation is designed to avoid this manual 'copy and mask' approach.",
+                3: "Incorrect. While a View works, it forces the use of Redshift. Lake Formation provides a centralized way to manage this across multiple services like Athena and EMR."
+            }
+        },
+        {
+            domain: "Data Operations & Orchestration",
+            type: "single",
+            question: "An AWS Glue job is consistently failing with 'java.lang.OutOfMemoryError: Java heap space'. The job processes large shuffle operations. Which action is the MOST effective to resolve this?",
+            options: [
+                "A. Increase the number of 'Max capacity' (DPUs) for the job.",
+                "B. Change the Worker Type from G.1X to G.2X.",
+                "C. Enable Job Bookmarks to process only new data.",
+                "D. Decrease the Glue 'Timeout' setting to fail faster and retry."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. Increasing the number of DPUs (scaling out) adds more workers, but if a single partition is too large for a worker's heap, adding more workers won't fix the memory issue on that specific worker.",
+                1: "Correct. G.2X workers provide twice the memory and disk space of G.1X workers. This scales up the individual worker to handle memory-intensive shuffles or large joins.",
+                2: "Incorrect. Job Bookmarks help with incremental loading but do not solve memory issues during the execution phase of a single batch.",
+                3: "Incorrect. Decreasing the timeout will cause the job to fail sooner, but it does nothing to address the underlying memory exhaustion."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "A data engineer needs to move 50 TB of historical data from an on-premises Hadoop cluster to Amazon S3. The company has a 100 Mbps internet connection. What is the BEST method for this migration?",
+            options: [
+                "A. Use AWS DataSync over the existing internet connection.",
+                "B. Use the AWS CLI 's3 cp' command with multi-part upload enabled.",
+                "C. Order an AWS Snowball Edge Storage Optimized device to migrate the data.",
+                "D. Set up an AWS Direct Connect 1Gbps connection and use S3 Transfer Acceleration."
+            ],
+            correctAnswers: [2],
+            explanations: {
+                0: "Incorrect. 50 TB over a 100 Mbps connection would take over 45 days, assuming 100% utilization and no overhead. This is too slow and unreliable.",
+                1: "Incorrect. Similar to DataSync, the bandwidth is the bottleneck for the CLI. It is not feasible for 50 TB at these speeds.",
+                2: "Correct. For dozens of terabytes where bandwidth is limited, AWS Snowball is the fastest and most cost-effective way to physically move data to the cloud.",
+                3: "Incorrect. Setting up Direct Connect takes weeks or months of lead time and is expensive for a one-time migration of 50 TB."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "A company receives data in XML format into an S3 bucket. They want to use AWS Glue to convert this data to Parquet and catalog it. The Glue crawler identifies the XML schema but the Glue job fails to parse nested tags correctly. What is the BEST approach to handle this?",
+            options: [
+                "A. Use a Glue DynamicFrame with the 'relationalize' transform.",
+                "B. Use an AWS Lambda function to convert XML to JSON before the Glue job runs.",
+                "C. Write a custom PySpark script using the 'com.databricks.spark.xml' library within the Glue job.",
+                "D. Manually update the Glue Data Catalog schema to flatten the nested XML."
+            ],
+            correctAnswers: [2],
+            explanations: {
+                0: "Incorrect. Relationalize is used to flatten nested JSON-like structures into a relational format, but it doesn't solve primary parsing issues for complex XML schemas.",
+                1: "Incorrect. This adds extra infrastructure and cost. Glue is capable of processing files directly if configured correctly.",
+                2: "Correct. AWS Glue supports external Spark libraries. The Databricks XML library is the standard for handling complex, nested XML in Spark/Glue environments.",
+                3: "Incorrect. Changing the catalog schema won't change how the underlying job reads the raw XML data; the parser will still fail."
+            }
+        },
+        {
+            domain: "Data Operations & Orchestration",
+            type: "single",
+            question: "A data pipeline uses AWS Step Functions to coordinate Glue jobs and Lambda functions. One Glue job often takes longer than expected, causing the entire state machine to time out. How should the data engineer fix this?",
+            options: [
+                "A. Increase the 'TimeoutSeconds' in the Step Functions State configuration for that specific Task.",
+                "B. Use a 'Wait' state before calling the Glue job to give it more buffer time.",
+                "C. Configure the Glue job to use more DPUs to ensure it always finishes under 10 minutes.",
+                "D. Implement a 'Parallel' state to run the Glue job and a timer simultaneously."
+            ],
+            correctAnswers: [0],
+            explanations: {
+                0: "Correct. Task states in Step Functions have a default timeout. Increasing 'TimeoutSeconds' allows the specific Glue task to run longer without failing the state machine.",
+                1: "Incorrect. A 'Wait' state happens before the job starts; it doesn't help if the job itself is taking a long time to execute.",
+                2: "Incorrect. While more DPUs might speed it up, it doesn't guarantee the job won't occasionally run longer due to data volume spikes. The state machine needs to be resilient to varied runtimes.",
+                3: "Incorrect. This is overly complex and doesn't solve the core issue of the Glue task itself timing out within the orchestration layer."
+            }
+        },
+        {
+            domain: "Data Storage & Management",
+            type: "single",
+            question: "Data in an Amazon S3 bucket must be automatically transitioned to a cheaper storage class after 30 days and deleted after 365 days. Which S3 feature should be used?",
+            options: [
+                "A. S3 Replication rules.",
+                "B. S3 Bucket Policies.",
+                "C. S3 Lifecycle policies.",
+                "D. S3 Intelligent-Tiering."
+            ],
+            correctAnswers: [2],
+            explanations: {
+                0: "Incorrect. Replication is used for copying data between buckets or regions for DR/compliance, not for lifecycle management.",
+                1: "Incorrect. Bucket policies are for access control (security), not for managing the lifecycle of objects.",
+                2: "Correct. S3 Lifecycle policies allow you to define transitions (e.g., to S3 Standard-IA or Glacier) and expiration (deletion) based on the age of the objects.",
+                3: "Incorrect. Intelligent-Tiering automatically moves data between tiers based on access patterns, but it does not handle scheduled deletion (expiration)."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "multiple",
+            question: "A data engineer is using Amazon Kinesis Data Firehose to deliver logs to S3. They want to minimize the number of small files being created in S3 to improve Athena query performance. Which TWO configurations should be adjusted? (Choose TWO)",
+            options: [
+                "A. Increase the Buffer size.",
+                "B. Decrease the Buffer interval.",
+                "C. Increase the Buffer interval.",
+                "D. Enable GZIP compression.",
+                "E. Use a Lambda transformation to merge records."
+            ],
+            correctAnswers: [0, 2],
+            explanations: {
+                0: "Correct. Increasing the buffer size forces Firehose to collect more data before writing an object to S3, resulting in larger, fewer files.",
+                1: "Incorrect. Decreasing the interval would cause Firehose to write files more frequently, increasing the number of small files.",
+                2: "Correct. Increasing the buffer interval (up to 900 seconds) allows more time for data to accumulate before a write operation occurs.",
+                3: "Incorrect. While compression is good practice, it actually makes files smaller, which doesn't solve the 'many small files' problem (though it helps with Athena costs).",
+                4: "Incorrect. Merging records inside a Lambda doesn't change when Firehose flushes the buffer to S3; the buffering configuration handles the file size."
+            }
+        },
+        {
+            domain: "Data Storage & Management",
+            type: "single",
+            question: "A company needs to share a subset of a Redshift database with a third-party analytics provider who also has an AWS account in a different region. What is the MOST efficient way to provide this access without moving data?",
+            options: [
+                "A. Use Redshift Data Sharing.",
+                "B. Take a snapshot of the cluster and share it with the third party's AWS account.",
+                "C. Use UNLOAD to export data to S3 and give the third party S3 access.",
+                "D. Create a Cross-Region VPC Peering connection and allow the third party to connect to the Redshift leader node."
+            ],
+            correctAnswers: [0],
+            explanations: {
+                0: "Correct. Redshift Data Sharing allows for secure, easy sharing of live data across clusters, accounts, and regions without the need to copy or move data.",
+                1: "Incorrect. Sharing a snapshot requires the third party to restore it to their own cluster, which involves moving data and incurring storage costs.",
+                2: "Incorrect. UNLOAD involves data movement and manual updates if the data changes; it is not 'efficient' for sharing live data.",
+                3: "Incorrect. This is highly insecure and operationally complex. Direct access to the leader node for a third party is not a recommended architectural pattern."
+            }
+        },
+        {
+            domain: "Data Security & Governance",
+            type: "single",
+            question: "A data engineer must ensure that all data stored in Amazon S3 is encrypted at rest using keys managed by the company's security team. The security team wants to audit the use of these keys. Which encryption method should be used?",
+            options: [
+                "A. SSE-S3 (Server-Side Encryption with Amazon S3-Managed Keys).",
+                "B. SSE-KMS (Server-Side Encryption with AWS KMS Keys).",
+                "C. SSE-C (Server-Side Encryption with Customer-Provided Keys).",
+                "D. Client-Side Encryption with manual key management."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. SSE-S3 uses keys managed by AWS, and users don't have control or audit visibility into the individual keys used for specific objects.",
+                1: "Correct. SSE-KMS allows the company to use their own Customer Master Keys (CMKs), provides an audit trail through CloudTrail, and allows the security team to manage permissions.",
+                2: "Incorrect. SSE-C requires the company to manage and send the key with every request, which is operationally heavy and doesn't leverage AWS's audit features as easily.",
+                3: "Incorrect. Client-Side encryption is possible but requires more complex application-side changes compared to the seamless server-side KMS integration."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "A data engineer wants to use Amazon Athena to query data stored in an RDS PostgreSQL database without migrating the data to S3. Which Athena feature allows this?",
+            options: [
+                "A. Athena Federated Query.",
+                "B. Athena Workgroups.",
+                "C. Athena Data Catalog.",
+                "D. Athena CTAS (Create Table As Select)."
+            ],
+            correctAnswers: [0],
+            explanations: {
+                0: "Correct. Athena Federated Query uses Lambda connectors to run SQL queries across data stored in relational, non-relational, object, and custom data sources.",
+                1: "Incorrect. Workgroups are used to isolate users, teams, or applications and to set query limits and track costs.",
+                2: "Incorrect. The Data Catalog stores metadata about S3 data; it doesn't provide the execution engine to reach into RDS directly without a connector.",
+                3: "Incorrect. CTAS is used to create new tables in S3 from existing Athena query results, which involves moving/creating data."
+            }
+        },
+        {
+            domain: "Data Operations & Orchestration",
+            type: "single",
+            question: "A company needs a serverless way to orchestrate a complex data workflow including Glue, Lambda, and Athena. The workflow requires branching logic based on the results of a previous step. Which service is BEST suited for this?",
+            options: [
+                "A. AWS Glue Workflows.",
+                "B. Amazon Managed Workflows for Apache Airflow (MWAA).",
+                "C. AWS Step Functions.",
+                "D. Amazon EventBridge."
+            ],
+            correctAnswers: [2],
+            explanations: {
+                0: "Incorrect. Glue Workflows are mostly limited to Glue-related tasks and lack the sophisticated branching and error handling found in Step Functions.",
+                1: "Incorrect. While MWAA can do this, it is not as 'serverless' in terms of startup time and cost for simple branching logic compared to Step Functions.",
+                2: "Correct. Step Functions is the standard serverless orchestrator that supports complex branching, retries, and integration with many AWS services.",
+                3: "Incorrect. EventBridge is an event bus for decoupling services, not a workflow orchestrator for managing state and branching logic."
+            }
+        },
+        {
+            domain: "Data Storage & Management",
+            type: "single",
+            question: "An Amazon Redshift cluster is running out of storage space. The workload consists of mostly complex read-heavy analytical queries. What is the MOST cost-effective way to scale storage while maintaining performance?",
+            options: [
+                "A. Resize the cluster by adding more nodes.",
+                "B. Switch to RA3 node types with Managed Storage.",
+                "C. Enable Concurrency Scaling.",
+                "D. Use the UNLOAD command to move old data to S3 and query it via Redshift Spectrum."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. Adding nodes increases both compute and storage costs, which might lead to over-provisioning compute if only storage is needed.",
+                1: "Correct. RA3 nodes allow you to scale and pay for compute and storage independently. Managed Storage automatically handles storage scaling using S3 as a backing layer.",
+                2: "Incorrect. Concurrency Scaling adds transient compute capacity to handle bursts in query volume; it does not increase permanent storage capacity.",
+                3: "Incorrect. While this saves space, Spectrum is slower for complex queries than local Redshift storage. RA3 is generally preferred for a 'hot' data performance requirement."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "A data engineer needs to ingest log data from multiple sources and ensure it is delivered to S3 in Parquet format. Which AWS service can perform this transformation natively during ingestion?",
+            options: [
+                "A. Amazon Kinesis Data Streams.",
+                "B. Amazon Kinesis Data Firehose.",
+                "C. AWS Glue DataBrew.",
+                "D. Amazon MSK."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. Kinesis Data Streams is just a transport layer; it doesn't transform data into Parquet natively.",
+                1: "Correct. Kinesis Data Firehose has a built-in feature to convert input JSON data to Parquet or ORC using a schema defined in the Glue Data Catalog.",
+                2: "Incorrect. DataBrew is a visual data preparation tool, usually used for cleaning data already in S3, not for real-time ingestion transformation.",
+                3: "Incorrect. MSK (Kafka) requires external consumers (like Spark or Flink) to perform transformations and write Parquet files."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "A company wants to capture changes from an RDS for MySQL database and update an S3 data lake in near real-time. Which combination of services should be used?",
+            options: [
+                "A. AWS Glue Crawler and Glue ETL Job.",
+                "B. AWS Data Migration Service (DMS) and Amazon S3.",
+                "C. Amazon AppFlow and Amazon S3.",
+                "D. RDS Snapshot and AWS Glue."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. Glue Crawlers detect schema; they don't capture real-time CDC (Change Data Capture) from a database.",
+                1: "Correct. AWS DMS with Change Data Capture (CDC) enabled is the standard way to stream updates from a relational database to S3 in near real-time.",
+                2: "Incorrect. AppFlow is for SaaS apps (Salesforce, etc.), not for CDC from an RDS database.",
+                3: "Incorrect. Snapshots are point-in-time backups and are not suitable for near real-time updates."
+            }
+        },
+        {
+            domain: "Data Storage & Management",
+            type: "single",
+            question: "A data engineer is query data in S3 using Amazon Athena. The queries are becoming slow and expensive because Athena scans the entire dataset for every query. What is the FIRST optimization to implement?",
+            options: [
+                "A. Use Athena Workgroups to limit data usage.",
+                "B. Convert the data to a columnar format like Parquet and implement partitioning.",
+                "C. Increase the Athena query concurrency limit.",
+                "D. Use Redshift Spectrum instead of Athena."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. Workgroups control costs by failing queries that exceed limits, but they don't actually make the queries faster or more efficient.",
+                1: "Correct. Columnar formats (Parquet) allow Athena to read only relevant columns, and partitioning allows it to skip irrelevant files based on the folder structure (e.g., /year=2023/).",
+                2: "Incorrect. Increasing concurrency allows more queries to run at once, but it doesn't solve the inefficiency of individual queries scanning too much data.",
+                3: "Incorrect. Redshift Spectrum also benefits from Parquet and partitioning; switching services without fixing the data format won't solve the root problem."
+            }
+        },
+        {
+            domain: "Data Security & Governance",
+            type: "single",
+            question: "A company needs to audit who accessed specific data in their S3 data lake and when. Which AWS service provides this detailed API-level logging?",
+            options: [
+                "A. AWS CloudTrail.",
+                "B. Amazon CloudWatch Logs.",
+                "C. VPC Flow Logs.",
+                "D. AWS Trusted Advisor."
+            ],
+            correctAnswers: [0],
+            explanations: {
+                0: "Correct. AWS CloudTrail records API calls made to AWS services, including S3 Data Events (GetObject, PutObject, etc.), which allows for auditing data access.",
+                1: "Incorrect. CloudWatch Logs store application logs and metrics, but they don't automatically capture S3 API access logs unless configured via CloudTrail or S3 Access Logging.",
+                2: "Incorrect. VPC Flow Logs capture network traffic information (IPs, ports) but not high-level service API actions or object-level access details.",
+                3: "Incorrect. Trusted Advisor provides recommendations on cost, security, and performance; it does not provide access logs."
+            }
+        },
+        {
+            domain: "Data Operations & Orchestration",
+            type: "multiple",
+            question: "A data engineer needs to monitor an AWS Glue job and receive an alert if the job fails. Which TWO services would be part of a serverless solution for this? (Choose TWO)",
+            options: [
+                "A. Amazon CloudWatch Events (EventBridge).",
+                "B. Amazon SNS.",
+                "C. Amazon SQS.",
+                "D. AWS Shield.",
+                "E. Amazon Kinesis Data Streams."
+            ],
+            correctAnswers: [0, 1],
+            explanations: {
+                0: "Correct. EventBridge can detect state changes in Glue jobs (e.g., 'FAILED') and trigger a target action.",
+                1: "Correct. Amazon SNS (Simple Notification Service) can be the target for the EventBridge rule to send an email or SMS notification to the data engineer.",
+                2: "Incorrect. SQS is a queuing service; while it could receive the event, it doesn't 'alert' a person natively without a consumer like Lambda.",
+                3: "Incorrect. AWS Shield is for DDoS protection, unrelated to Glue job monitoring.",
+                4: "Incorrect. Kinesis is for high-volume streaming data ingestion, not for monitoring discrete job state events."
+            }
+        },
+        {
+            domain: "Data Storage & Management",
+            type: "single",
+            question: "What is the primary benefit of using a Sort Key in Amazon Redshift?",
+            options: [
+                "A. It determines how data is distributed across nodes.",
+                "B. It defines the primary key constraint for the table.",
+                "C. It allows Redshift to skip entire blocks of data during query execution based on range filters.",
+                "D. It automatically compresses the data using the best algorithm."
+            ],
+            correctAnswers: [2],
+            explanations: {
+                0: "Incorrect. Distribution keys (DISTKEY) determine how data is distributed across nodes.",
+                1: "Incorrect. Redshift does not strictly enforce primary key constraints; sort keys are for performance, not integrity.",
+                2: "Correct. By storing data in sorted order, Redshift can use zone maps to skip blocks that don't contain the requested range, significantly speeding up queries.",
+                3: "Incorrect. Compression is managed by Encoding (ENCODE), not by the Sort Key."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "A company has a massive amount of data in an S3-based data lake. They want to provide a SQL interface for analysts to query the data without managing any infrastructure. Which service is the BEST fit?",
+            options: [
+                "A. Amazon Redshift Provisioned.",
+                "B. Amazon Athena.",
+                "C. AWS Glue ETL.",
+                "D. Amazon RDS."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. Redshift Provisioned requires managing clusters and nodes.",
+                1: "Correct. Amazon Athena is a serverless, interactive query service that allows you to use standard SQL to analyze data directly in Amazon S3.",
+                2: "Incorrect. Glue ETL is for data transformation (writing code), not an interactive SQL interface for analysts.",
+                3: "Incorrect. RDS is a relational database for OLTP, not designed for massive analytical queries on S3 data lakes."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "A data engineer is using AWS Glue to crawl an S3 bucket containing partitioned data (year/month/day). The crawler creates one table for each day instead of one single table with partitions. What is the MOST likely cause?",
+            options: [
+                "A. The schemas of the files in different folders are slightly different.",
+                "B. The crawler does not have permission to read all folders.",
+                "C. The S3 bucket is in a different region than the crawler.",
+                "D. The files are in CSV format instead of Parquet."
+            ],
+            correctAnswers: [0],
+            explanations: {
+                0: "Correct. If Glue Crawler detects inconsistent schemas between subfolders, it will create separate tables to avoid data corruption or errors.",
+                1: "Incorrect. If permissions were missing, the crawler would likely fail or find no data at all, rather than creating separate tables.",
+                2: "Incorrect. Crawlers can reach across regions (though data transfer costs apply), and this wouldn't affect the logical grouping of tables.",
+                3: "Incorrect. Format doesn't determine partitioning behavior; Glue supports partitioning for many formats, including CSV."
+            }
+        },
+        {
+            domain: "Data Operations & Orchestration",
+            type: "single",
+            question: "Which AWS service is specifically designed to provide managed Apache Airflow environments for data pipeline orchestration?",
+            options: [
+                "A. AWS Step Functions.",
+                "B. Amazon MWAA.",
+                "C. AWS Data Pipeline.",
+                "D. Amazon EventBridge."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. Step Functions is a proprietary AWS orchestration service, not based on Airflow.",
+                1: "Correct. Amazon Managed Workflows for Apache Airflow (MWAA) is the managed service for running Airflow DAGs.",
+                2: "Incorrect. AWS Data Pipeline is an older service for moving and processing data; it is not Airflow-compatible.",
+                3: "Incorrect. EventBridge is an event bus, not an orchestration engine for DAGs."
+            }
+        },
+        {
+            domain: "Data Security & Governance",
+            type: "single",
+            question: "A data engineer needs to ensure that PII in an S3 bucket is automatically discovered and flagged. Which service should they use?",
+            options: [
+                "A. Amazon GuardDuty.",
+                "B. Amazon Macie.",
+                "C. Amazon Inspector.",
+                "D. AWS WAF."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. GuardDuty is for threat detection (malicious activity), not for scanning data content for PII.",
+                1: "Correct. Amazon Macie is a fully managed data security and privacy service that uses machine learning and pattern matching to discover PII in S3.",
+                2: "Incorrect. Inspector is for vulnerability scanning of EC2 instances and containers.",
+                3: "Incorrect. WAF is a web application firewall for protecting web apps from exploits."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "A company needs to ingest data from an on-premises Oracle database into Amazon Redshift. The migration must involve zero downtime and handle continuous updates. Which service is BEST?",
+            options: [
+                "A. AWS Snowcone.",
+                "B. AWS Glue ETL.",
+                "C. AWS Database Migration Service (DMS).",
+                "D. Amazon Redshift COPY command."
+            ],
+            correctAnswers: [2],
+            explanations: {
+                0: "Incorrect. Snowcone is a small physical transfer device; it doesn't handle live database migration or continuous updates.",
+                1: "Incorrect. Glue ETL is better for batch transformation, not for zero-downtime database replication/CDC.",
+                2: "Correct. AWS DMS supports 'Full Load + CDC', allowing you to migrate the initial data and then continuously replicate changes with minimal downtime.",
+                3: "Incorrect. The COPY command is for loading data from S3/DynamoDB, not for direct migration from an on-prem database."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "Which Kinesis service should be used if the requirement is to process data using complex custom Java or Python applications with sub-second latency?",
+            options: [
+                "A. Kinesis Data Firehose.",
+                "B. Kinesis Data Streams.",
+                "C. Kinesis Data Analytics.",
+                "D. Kinesis Video Streams."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. Firehose has a minimum 60-second latency and is designed for delivery, not custom sub-second processing logic.",
+                1: "Correct. Kinesis Data Streams provides the raw stream for custom consumers (using KCL or Lambda) to process data with millisecond-scale latency.",
+                2: "Incorrect. Data Analytics is for SQL or Flink-based analysis; while fast, the 'raw' stream is the foundation for custom app development.",
+                3: "Incorrect. This is for video and time-encoded data, not general application logs or events."
+            }
+        },
+        {
+            domain: "Data Storage & Management",
+            type: "single",
+            question: "A data engineer needs to join two tables in Athena. Table A is 1 TB in Parquet. Table B is 100 MB in CSV. Both are in S3. What is the most efficient way to perform this?",
+            options: [
+                "A. Convert Table B to Parquet first, then join.",
+                "B. Use a Glue job to join them and write the result to a new table.",
+                "C. Just write the SQL join in Athena; it will handle the different formats and sizes automatically.",
+                "D. Load both into Redshift and perform the join there."
+            ],
+            correctAnswers: [2],
+            explanations: {
+                0: "Incorrect. For 100 MB, the overhead of a conversion job is likely higher than the cost of Athena reading the CSV directly.",
+                1: "Incorrect. This is overkill for a simple join unless the job needs to be repeated frequently with more complex logic.",
+                2: "Correct. Athena can transparently join tables of different formats as long as they are cataloged. For a 100 MB file, the performance impact is negligible.",
+                3: "Incorrect. This involves unnecessary data movement and infrastructure management for a one-off or simple analytical query."
+            }
+        },
+        {
+            domain: "Data Security & Governance",
+            type: "single",
+            question: "An organization wants to centrally manage permissions for various data consumers accessing S3 data via Athena, Redshift Spectrum, and Amazon EMR. Which service should they use?",
+            options: [
+                "A. IAM Policy Simulator.",
+                "B. AWS Lake Formation.",
+                "C. Amazon S3 Access Points.",
+                "D. AWS Organizations."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. This is a testing tool, not a permission management service.",
+                1: "Correct. Lake Formation provides a central place to define access control policies for data in S3 and enforces them across multiple query engines.",
+                2: "Incorrect. S3 Access Points simplify bucket access for different apps but don't provide the fine-grained (row/column) data governance of Lake Formation.",
+                3: "Incorrect. AWS Organizations is for account-level management and billing, not for fine-grained data permissions."
+            }
+        },
+        {
+            domain: "Data Storage & Management",
+            type: "single",
+            question: "In Amazon Redshift, which distribution style is best for a dimension table that is relatively small and frequently joined with multiple large fact tables?",
+            options: [
+                "A. KEY.",
+                "B. EVEN.",
+                "C. ALL.",
+                "D. AUTO."
+            ],
+            correctAnswers: [2],
+            explanations: {
+                0: "Incorrect. KEY is best for large tables joined on a specific key.",
+                1: "Incorrect. EVEN is for tables not frequently joined.",
+                2: "Correct. ALL distribution copies the entire table to every node, ensuring local joins and eliminating data shuffling for small dimension tables.",
+                3: "Incorrect. AUTO lets Redshift decide, but for a known small dimension table, ALL is the explicit best practice."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "What is the primary purpose of a 'Crawler' in AWS Glue?",
+            options: [
+                "A. To encrypt data at rest in S3.",
+                "B. To move data from S3 to Redshift.",
+                "C. To scan data sources and automatically create metadata in the Glue Data Catalog.",
+                "D. To monitor the performance of Spark jobs."
+            ],
+            correctAnswers: [2],
+            explanations: {
+                0: "Incorrect. Encryption is handled by S3 or KMS.",
+                1: "Incorrect. Moving data is done by Glue ETL jobs or the COPY command.",
+                2: "Correct. Crawlers connect to data stores, determine the schema, and create table definitions in the Glue Data Catalog.",
+                3: "Incorrect. Monitoring is handled by CloudWatch or the Glue job run metrics."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "multiple",
+            question: "A company needs to ingest real-time data and wants to ensure that data is stored in S3 for long-term analysis. They also need to trigger an AWS Lambda function for each incoming record for immediate alerting. Which TWO Kinesis features/services should be used? (Choose TWO)",
+            options: [
+                "A. Kinesis Data Streams.",
+                "B. Kinesis Data Firehose.",
+                "C. Kinesis Video Streams.",
+                "D. Kinesis Data Analytics.",
+                "E. Kinesis Producer Library (KPL)."
+            ],
+            correctAnswers: [0, 1],
+            explanations: {
+                0: "Correct. Kinesis Data Streams can trigger Lambda functions for every record (using an event source mapping) to handle immediate alerting.",
+                1: "Correct. Kinesis Data Firehose is the easiest way to reliably capture and load streaming data into S3 for long-term storage.",
+                2: "Incorrect. Video streams are for binary time-series video data.",
+                3: "Incorrect. Data Analytics is for SQL/Flink processing, not for triggering individual Lambda functions per record as an event source.",
+                4: "Incorrect. KPL is a client-side library for sending data to Kinesis, not a service for storage or Lambda triggering."
+            }
+        },
+        {
+            domain: "Data Operations & Orchestration",
+            type: "single",
+            question: "A data engineer wants to ensure that a Glue ETL job can access a database inside a private subnet of a VPC. What must be created?",
+            options: [
+                "A. A Glue VPC Connection.",
+                "B. An IAM Role for the database.",
+                "C. An S3 VPC Endpoint.",
+                "D. A Public NAT Gateway."
+            ],
+            correctAnswers: [0],
+            explanations: {
+                0: "Correct. A Glue Connection with VPC properties allows Glue to provision elastic network interfaces (ENIs) in your VPC to reach private resources.",
+                1: "Incorrect. IAM roles provide permissions, but they don't solve the network routing requirement into a private subnet.",
+                2: "Incorrect. This allows Glue to reach S3 without going over the internet, but it doesn't help with reaching an RDS database.",
+                3: "Incorrect. Glue jobs need to get into the VPC, not just get out to the internet (which is what a NAT Gateway does)."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "An AWS Glue job is taking too long to process. After checking the logs, you see that one worker is doing significantly more work than the others. What is the most likely cause?",
+            options: [
+                "A. The number of DPUs is too low.",
+                "B. Data Skew.",
+                "C. The job timeout is too short.",
+                "D. The S3 bucket is throttled."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. Low DPUs would make the whole job slow, but wouldn't cause a single worker to be disproportionately busy.",
+                1: "Correct. Data skew happens when a partitioning key has a disproportionate amount of data for one value, causing one Spark executor to handle much more data than others.",
+                2: "Incorrect. Short timeout causes failure, not workload imbalance.",
+                3: "Incorrect. Throttling would likely affect all workers trying to read from the bucket."
+            }
+        },
+        {
+            domain: "Data Security & Governance",
+            type: "single",
+            question: "A company needs to implement row-level security on a table accessed via Amazon Athena. Which is the BEST way to achieve this?",
+            options: [
+                "A. Use S3 bucket policies with conditions.",
+                "B. Use AWS Lake Formation row-level filters.",
+                "C. Create multiple Athena workgroups.",
+                "D. Encrypt each row with a different KMS key."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. S3 policies cannot distinguish between rows within a file.",
+                1: "Correct. Lake Formation supports row-level security by defining filters that restrict which rows a specific user can see.",
+                2: "Incorrect. Workgroups manage query limits and logging, not data-level access control.",
+                3: "Incorrect. This is technically impossible for Athena to process and doesn't solve access control."
+            }
+        },
+        {
+            domain: "Data Storage & Management",
+            type: "single",
+            question: "Which Redshift feature allows you to query data directly from Amazon S3 without loading it into the cluster?",
+            options: [
+                "A. Redshift Managed Storage.",
+                "B. Redshift Spectrum.",
+                "C. Redshift Data API.",
+                "D. Redshift ML."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. This is the storage layer for RA3 nodes, which still requires data to be 'in' Redshift.",
+                1: "Correct. Spectrum allows Redshift to execute queries against external tables stored in S3.",
+                2: "Incorrect. The Data API is for running queries asynchronously without a persistent connection.",
+                3: "Incorrect. Redshift ML is for creating and training machine learning models using SQL."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "A data engineer needs to run a one-time job to clean a 10 GB CSV file in S3. The task requires a visual interface to define transformations. Which service is BEST?",
+            options: [
+                "A. AWS Glue ETL script.",
+                "B. Amazon EMR.",
+                "C. AWS Glue DataBrew.",
+                "D. Amazon Athena."
+            ],
+            correctAnswers: [2],
+            explanations: {
+                0: "Incorrect. Glue ETL requires writing Python or Scala code.",
+                1: "Incorrect. EMR is for big data clusters and doesn't provide a native visual cleaning interface like DataBrew.",
+                2: "Correct. DataBrew is a visual data preparation tool that allows users to clean and normalize data without writing code.",
+                3: "Incorrect. Athena is for querying data using SQL, not for a visual transformation/cleaning interface."
+            }
+        },
+        {
+            domain: "Data Storage & Management",
+            type: "single",
+            question: "In Amazon Redshift, what is the effect of the VACUUM command?",
+            options: [
+                "A. It compresses the database to save space.",
+                "B. It re-sorts data and reclaims space from deleted rows.",
+                "C. It updates the statistics used by the query optimizer.",
+                "D. It backs up the cluster to S3."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. Compression is part of table design/encoding, not the VACUUM command.",
+                1: "Correct. VACUUM re-sorts rows to maintain the Sort Key performance and removes 'ghost' rows marked for deletion.",
+                2: "Incorrect. Updating statistics is the job of the ANALYZE command.",
+                3: "Incorrect. Backups are handled by Snapshots."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "A data engineer wants to ingest data from an S3 bucket into a Redshift cluster. Which method is the fastest and most recommended by AWS?",
+            options: [
+                "A. Use multiple INSERT statements.",
+                "B. Use the Redshift COPY command.",
+                "C. Use a Lambda function to write records one by one.",
+                "D. Use a Glue Python Shell job."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. INSERT statements are very slow in Redshift because it is a columnar database designed for bulk loads.",
+                1: "Correct. The COPY command is highly optimized for parallel loading from S3 into Redshift nodes.",
+                2: "Incorrect. Individual writes are inefficient for OLAP databases like Redshift.",
+                3: "Incorrect. A Glue job would likely use the COPY command internally anyway; using COPY directly is the standard recommendation."
+            }
+        },
+        {
+            domain: "Data Security & Governance",
+            type: "single",
+            question: "A company wants to ensure that all changes to their AWS Glue Data Catalog are tracked. Which service provides a history of these changes?",
+            options: [
+                "A. AWS CloudTrail.",
+                "B. Amazon CloudWatch Metrics.",
+                "C. AWS Glue Data Quality.",
+                "D. AWS Config."
+            ],
+            correctAnswers: [0],
+            explanations: {
+                0: "Correct. CloudTrail tracks API calls, including 'CreateTable', 'UpdateTable', and 'DeleteTable' in the Glue Data Catalog.",
+                1: "Incorrect. Metrics show performance data (e.g., job success rate) but not a history of metadata changes.",
+                2: "Incorrect. Data Quality is for checking the contents of the data, not the metadata catalog history.",
+                3: "Incorrect. While Config tracks resource configurations, CloudTrail is the primary service for API-level auditing of catalog changes."
+            }
+        },
+        {
+            domain: "Data Storage & Management",
+            type: "single",
+            question: "Which S3 storage class is most appropriate for data that is rarely accessed but must be available in milliseconds when requested?",
+            options: [
+                "A. S3 Standard-IA.",
+                "B. S3 Glacier Flexible Retrieval.",
+                "C. S3 Glacier Deep Archive.",
+                "D. S3 Outposts."
+            ],
+            correctAnswers: [0],
+            explanations: {
+                0: "Correct. Standard-IA (Infrequent Access) is for data accessed less frequently but requiring rapid access (milliseconds) when needed.",
+                1: "Incorrect. Glacier Flexible Retrieval has a retrieval time of minutes to hours.",
+                2: "Incorrect. Glacier Deep Archive has a retrieval time of 12-48 hours.",
+                3: "Incorrect. S3 Outposts is for on-premises S3 storage."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "A data engineer is using Kinesis Data Firehose to send data to an S3 bucket. They want to organize the data by the date it was received (e.g., s3://my-bucket/2023/10/24/). How can this be done?",
+            options: [
+                "A. Firehose does this automatically by default.",
+                "B. You must write a custom Lambda function to move the files after delivery.",
+                "C. Configure a custom S3 prefix in the Firehose destination settings.",
+                "D. Use a Glue Crawler to rename the files."
+            ],
+            correctAnswers: [2],
+            explanations: {
+                0: "Incorrect. Firehose has a default format (YYYY/MM/DD/HH), but it might not match the exact desired folder structure without configuration.",
+                1: "Incorrect. Moving files after delivery is inefficient and adds cost.",
+                2: "Correct. Firehose allows you to specify a custom S3 prefix and use expressions (like !{timestamp:yyyy/MM/dd/}) to organize data.",
+                3: "Incorrect. Crawlers create metadata; they don't move or rename physical files in S3."
+            }
+        },
+        {
+            domain: "Data Operations & Orchestration",
+            type: "multiple",
+            question: "A data engineer needs to optimize the cost of an AWS Glue job. Which TWO actions will help? (Choose TWO)",
+            options: [
+                "A. Enable Glue Job Bookmarks.",
+                "B. Use Flex execution for non-urgent jobs.",
+                "C. Increase the number of DPUs.",
+                "D. Use G.2X workers instead of G.1X.",
+                "E. Disable Auto Scaling."
+            ],
+            correctAnswers: [0, 1],
+            explanations: {
+                0: "Correct. Bookmarks ensure the job only processes new data, reducing the amount of data processed and thus the cost.",
+                1: "Correct. Glue Flex is a lower-cost execution class (up to 35% cheaper) for jobs that don't have strict start-time requirements.",
+                2: "Incorrect. Increasing DPUs usually increases cost unless it drastically reduces execution time, but it's not a direct cost-saving measure.",
+                3: "Incorrect. G.2X workers are more expensive per hour than G.1X.",
+                4: "Incorrect. Auto Scaling helps save money by only using the workers needed for the workload."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "You need to ingest data from a SaaS provider like Salesforce into Amazon S3. Which service provides a managed connector for this?",
+            options: [
+                "A. AWS DataSync.",
+                "B. Amazon AppFlow.",
+                "C. AWS Snowcone.",
+                "D. Amazon MQ."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. DataSync is for migrating data between on-prem storage and AWS or between AWS storage services.",
+                1: "Correct. Amazon AppFlow is specifically designed to securely transfer data between SaaS applications and AWS services like S3 and Redshift.",
+                2: "Incorrect. Snowcone is a physical device for data transfer.",
+                3: "Incorrect. Amazon MQ is a managed message broker service for software applications."
+            }
+        },
+        {
+            domain: "Data Security & Governance",
+            type: "single",
+            question: "A data engineer wants to mask sensitive data in a Glue ETL job before writing it to S3. What is the most efficient way to do this within Glue?",
+            options: [
+                "A. Write a custom regex in Python.",
+                "B. Use the Glue 'Detect PII' transform.",
+                "C. Use Amazon Macie after the data is written.",
+                "D. Use an Athena query to mask the data."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. Custom code is harder to maintain than built-in transforms.",
+                1: "Correct. Glue has a built-in 'Detect PII' transform that can identify and mask or remove sensitive data during the ETL process.",
+                2: "Incorrect. Macie discovers PII but doesn't transform/mask it during the ingestion process.",
+                3: "Incorrect. This is a post-processing step; masking should happen before the data is persisted if security is a priority."
+            }
+        },
+        {
+            domain: "Data Storage & Management",
+            type: "single",
+            question: "Which Amazon Redshift node type is best for data sets over 1 PB that require high performance but also high storage capacity?",
+            options: [
+                "A. DC2.",
+                "B. DS2.",
+                "C. RA3.",
+                "D. M5."
+            ],
+            correctAnswers: [2],
+            explanations: {
+                0: "Incorrect. DC2 is for compute-intensive workloads with smaller datasets (under 1 TB usually).",
+                1: "Incorrect. DS2 is an older generation node type being replaced by RA3.",
+                2: "Correct. RA3 nodes are designed for large datasets, allowing independent scaling of compute and storage via Redshift Managed Storage.",
+                3: "Incorrect. M5 is an EC2 instance type, not a Redshift node type."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "A company wants to perform real-time SQL analysis on data coming into a Kinesis Data Stream. Which service should they use?",
+            options: [
+                "A. Amazon Athena.",
+                "B. Amazon Kinesis Data Analytics.",
+                "C. Amazon Redshift Spectrum.",
+                "D. AWS Glue DataBrew."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. Athena queries data at rest in S3; it doesn't query a live Kinesis stream directly in real-time.",
+                1: "Correct. Kinesis Data Analytics allows you to use SQL or Apache Flink to analyze streaming data in real-time.",
+                2: "Incorrect. Spectrum is for querying data in S3 via Redshift.",
+                3: "Incorrect. DataBrew is for visual data preparation of data at rest."
+            }
+        },
+        {
+            domain: "Data Operations & Orchestration",
+            type: "single",
+            question: "What is the role of an 'IAM Role' in an AWS Glue job?",
+            options: [
+                "A. It defines the schedule for the job.",
+                "B. It provides the necessary permissions for the job to access AWS resources like S3 and the Glue Catalog.",
+                "C. It specifies the number of DPUs allocated to the job.",
+                "D. It acts as a primary key for the Glue Catalog tables."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. Scheduling is handled by Glue Triggers.",
+                1: "Correct. The IAM role is assumed by the Glue service to perform actions (read/write) on your behalf.",
+                2: "Incorrect. Worker capacity is a job configuration, not an IAM role property.",
+                3: "Incorrect. IAM roles have no relation to table indexing or keys."
+            }
+        },
+        {
+            domain: "Data Security & Governance",
+            type: "single",
+            question: "Which AWS service can be used to track the lineage of data processed by AWS Glue jobs?",
+            options: [
+                "A. AWS Glue Data Catalog.",
+                "B. AWS CloudTrail.",
+                "C. Amazon SageMaker.",
+                "D. There is no native 'Data Lineage' service in AWS, but Glue provides some lineage through the catalog and job run monitoring."
+            ],
+            correctAnswers: [3],
+            explanations: {
+                0: "Incorrect. The catalog stores metadata but doesn't natively visualize the 'flow' or lineage of data between multiple jobs.",
+                1: "Incorrect. CloudTrail tracks who did what, but not how data transformed from one table to another.",
+                2: "Incorrect. SageMaker is for ML, not data lineage.",
+                3: "Correct. While AWS doesn't have a dedicated service named 'AWS Data Lineage', Glue provides lineage information as part of its catalog and through integration with tools like Amazon DataZone."
+            }
+        },
+        {
+            domain: "Data Ingestion & Transformation",
+            type: "single",
+            question: "What is the purpose of 'Partition Projection' in Amazon Athena?",
+            options: [
+                "A. It encrypts the partitions.",
+                "B. It allows Athena to calculate partition information from configuration rather than searching the Glue Data Catalog.",
+                "C. It moves data to a faster storage tier.",
+                "D. It creates a 3D visualization of the data."
+            ],
+            correctAnswers: [1],
+            explanations: {
+                0: "Incorrect. Encryption is separate from partition management.",
+                1: "Correct. For highly partitioned data, retrieving partition info from the catalog can be slow. Projection speeds this up by calculating the partition values and S3 paths based on rules.",
+                2: "Incorrect. It is a metadata optimization, not a physical data movement tool.",
+                3: "Incorrect. This is a humorous distractor."
+            }
+        },
+        {
+            domain: "Data Storage & Management",
+            type: "single",
+            question: "A data engineer wants to run a large-scale Spark cluster for a few hours to perform complex data processing. They want to minimize costs and don't mind if the cluster is interrupted. Which EMR feature should they use?",
+            options: [
+                "A. On-Demand Instances.",
+                "B. Reserved Instances.",
+                "C. Spot Instances.",
+                "D. Dedicated Hosts."
+            ],
+            correctAnswers: [2],
+            explanations: {
+                0: "Incorrect. On-Demand is more expensive and used for jobs that cannot be interrupted.",
+                1: "Incorrect. Reserved Instances require a 1-3 year commitment, not suitable for a 'few hours'.",
+                2: "Correct. Spot Instances offer up to 90% discount compared to On-Demand, which is perfect for EMR workloads that can handle node interruptions.",
+                3: "Incorrect. Dedicated hosts are for compliance/licensing and are the most expensive option."
+            }
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let userSelections = [];
+    let submitted = false;
+
+    function initExam() {
+        renderQuestion();
+        updateUI();
+    }
+
+    function renderQuestion() {
+        const q = questions[currentQuestionIndex];
+        const container = document.getElementById('question-container');
+        container.innerHTML = '';
+
+        const qBox = document.createElement('div');
+        qBox.className = 'question-box active';
+
+        const domainTag = document.createElement('div');
+        domainTag.className = 'domain-tag';
+        domainTag.innerText = q.domain;
+        qBox.appendChild(domainTag);
+
+        const qText = document.createElement('div');
+        qText.className = 'question-text';
+        qText.innerText = q.question;
+        qBox.appendChild(qText);
+
+        const optionsList = document.createElement('ul');
+        optionsList.className = 'options-list';
+
+        q.options.forEach((opt, idx) => {
+            const li = document.createElement('li');
+            li.className = 'option-item';
+            
+            const input = document.createElement('input');
+            input.type = q.type === 'multiple' ? 'checkbox' : 'radio';
+            input.name = 'q-opt';
+            input.value = idx;
+            input.id = `opt-${idx}`;
+            
+            const label = document.createElement('label');
+            label.htmlFor = `opt-${idx}`;
+            label.innerText = opt;
+
+            li.appendChild(input);
+            li.appendChild(label);
+            li.onclick = () => {
+                if (!submitted) {
+                    if (q.type === 'multiple') {
+                        input.checked = !input.checked;
+                    } else {
+                        input.checked = true;
+                    }
+                }
+            };
+            optionsList.appendChild(li);
+        });
+
+        qBox.appendChild(optionsList);
+
+        const feedbackArea = document.createElement('div');
+        feedbackArea.id = 'feedback-area';
+        feedbackArea.className = 'feedback-area';
+        qBox.appendChild(feedbackArea);
+
+        container.appendChild(qBox);
+    }
+
+    function updateUI() {
+        document.getElementById('current-q-num').innerText = currentQuestionIndex + 1;
+        const progress = ((currentQuestionIndex) / questions.length) * 100;
+        document.getElementById('progress-fill').style.width = `${progress}%`;
+        
+        document.getElementById('btn-prev').disabled = currentQuestionIndex === 0;
+        document.getElementById('btn-submit').style.display = submitted ? 'none' : 'inline-block';
+        document.getElementById('btn-next').style.display = submitted ? 'inline-block' : 'none';
+        
+        if (currentQuestionIndex === questions.length - 1 && submitted) {
+            document.getElementById('btn-next').innerText = "Finish Exam";
+        } else {
+            document.getElementById('btn-next').innerText = "Next Question";
+        }
+    }
+
+    function submitAnswer() {
+        const q = questions[currentQuestionIndex];
+        const selectedInputs = document.querySelectorAll('input[name="q-opt"]:checked');
+        const selectedIndices = Array.from(selectedInputs).map(i => parseInt(i.value));
+
+        if (selectedIndices.length === 0) {
+            alert("Please select an answer.");
+            return;
+        }
+
+        submitted = true;
+        const feedbackArea = document.getElementById('feedback-area');
+        feedbackArea.style.display = 'block';
+
+        const isCorrect = checkCorrectness(selectedIndices, q.correctAnswers);
+        if (isCorrect) {
+            score++;
+            feedbackArea.className = 'feedback-area feedback-correct';
+            feedbackArea.innerHTML = '<strong>✅ Correct!</strong>';
+        } else {
+            feedbackArea.className = 'feedback-area feedback-incorrect';
+            feedbackArea.innerHTML = '<strong>❌ Incorrect.</strong>';
+        }
+
+        // Add Explanations
+        let explHTML = '<div style="margin-top:15px"><strong>Explanations:</strong></div>';
+        q.options.forEach((opt, idx) => {
+            const isRightOpt = q.correctAnswers.includes(idx);
+            explHTML += `<div class="explanation-item">
+                <b>${opt.split('.')[0]}: ${isRightOpt ? '✅' : '❌'}</b>
+                ${q.explanations[idx]}
+            </div>`;
+        });
+        feedbackArea.innerHTML += explHTML;
+
+        // Disable inputs
+        document.querySelectorAll('input[name="q-opt"]').forEach(i => i.disabled = true);
+        updateUI();
+    }
+
+    function checkCorrectness(selected, correct) {
+        if (selected.length !== correct.length) return false;
+        return selected.every(val => correct.includes(val));
+    }
+
+    function moveNext() {
+        if (currentQuestionIndex < questions.length - 1) {
+            currentQuestionIndex++;
+            submitted = false;
+            renderQuestion();
+            updateUI();
+        } else {
+            showFinalResults();
+        }
+    }
+
+    function movePrevious() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            submitted = true; // Stay in submitted state to show logic (simulated for this practice app)
+            renderQuestion();
+            // Re-render logic would normally store user state; here we just reset for simplicity
+            submitted = false; 
+            updateUI();
+        }
+    }
+
+    function showFinalResults() {
+        document.getElementById('exam-ui').style.display = 'none';
+        const resultScreen = document.getElementById('result-screen');
+        resultScreen.style.display = 'block';
+
+        const percent = Math.round((score / questions.length) * 100);
+        const scoreCircle = document.getElementById('final-score-circle');
+        scoreCircle.innerText = `${percent}%`;
+
+        const msgDiv = document.getElementById('pass-fail-msg');
+        if (percent >= 72) {
+            msgDiv.innerHTML = '<span class="pass-msg">PASS</span>';
+            scoreCircle.style.borderColor = 'var(--correct-color)';
+        } else {
+            msgDiv.innerHTML = '<span class="fail-msg">FAIL</span>';
+            scoreCircle.style.borderColor = 'var(--incorrect-color)';
+        }
+
+        document.getElementById('correct-count').innerText = score;
+    }
+
+    // Start
+    initExam();
+</script>
+
+</body>
+</html>
